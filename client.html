@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>IoT Dashboard</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    .device {
+      border: 1px solid #ccc; border-radius: 10px;
+      padding: 10px; margin-bottom: 10px;
+      background-color: #f9f9f9;
+    }
+    .device h2 { margin: 0 0 5px 0; font-size: 1.1em; }
+    .metrics { font-family: monospace; }
+  </style>
+</head>
+<body>
+  <h1>Telemetry Monitor</h1>
+  <div id="devices"></div>
+
+  <script>
+    const socket = new WebSocket("ws://localhost:8765");
+
+    const devicesContainer = document.getElementById("devices");
+    const deviceBlocks = {}; 
+    socket.onopen = () => {
+      console.log("Connected");
+      socket.send(JSON.stringify({type: "AUTH", payload: {token: "abc123"}}));
+      socket.send(JSON.stringify({type: "SUBSCRIBE", payload: {device_id: "device001"}}));
+      socket.send(JSON.stringify({type: "SUBSCRIBE", payload: {device_id: "device002"}}));
+      socket.send(JSON.stringify({type: "SUBSCRIBE", payload: {device_id: "device003"}}));
+    };
+
+    socket.onmessage = (event) => {
+      const msg = JSON.parse(event.data);
+      if (msg.type === "TELEMETRY") {
+        const { device_id, temperature, humidity, battery } = msg.payload;
+
+        if (!deviceBlocks[device_id]) {
+          const div = document.createElement("div");
+          div.className = "device";
+          div.innerHTML = `
+            <h2>${device_id}</h2>
+            <div class="metrics" id="metrics-${device_id}"></div>
+          `;
+          devicesContainer.appendChild(div);
+          deviceBlocks[device_id] = document.getElementById(`metrics-${device_id}`);
+        }
+
+        const metricsDiv = deviceBlocks[device_id];
+        const now = new Date().toLocaleTimeString();
+        const line = `[${now}] T: ${temperature}°C, H: ${humidity}%, B: ${battery}%<br>`;
+        metricsDiv.innerHTML = line + metricsDiv.innerHTML; 
+      } else {
+        console.log("Server message:", msg);
+      }
+    };
+
+    socket.onerror = (error) => console.error("WebSocket error", error);
+    socket.onclose = () => console.log("Connection closed");
+  </script>
+</body>
+</html>
