@@ -117,7 +117,7 @@ python device_sim.py
   ![image](https://github.com/user-attachments/assets/a414725d-6519-4b65-b013-61a29c4054f1)
 
 
-## Структура проекта
+## Структура проекта (без учета readme)
 
 ![image](https://github.com/user-attachments/assets/a76c8ee0-1ceb-4edb-8903-138f07521dda)
 
